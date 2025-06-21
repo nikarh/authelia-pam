@@ -1,0 +1,26 @@
+[package]
+name = "authelia-pam"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+pico-args = "0.5.0"
+serde_json = "1.0.140"
+ureq = { version = "3.0.12", default-features = false, features = [
+    "native-tls",
+] }
+
+[profile.release]
+opt-level = 'z'
+strip = true
+lto = true
+codegen-units = 1
+panic = "abort"
+
+# Unfortunately compiling `ureq` with `native-tls` feature forces
+# `webpki-root-certs` dependency to be compiled.
+# Since the application uses native TLS CA certificates, this
+# dependency is not needed and is patched to provide an empty array
+# of CA certificates.
+[patch.crates-io]
+webpki-root-certs = { path = "./patch/webpki-root-certs" }
