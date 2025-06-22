@@ -11,14 +11,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Fixed
 - Fixed CI by @nikarh
-
-
-## [Unreleased]
-### Details
-#### Changed
-- Initial commit by @nikarh
-
-#### Fixed
-- Fixed CI
-
-
