@@ -14,9 +14,8 @@ fn main() {
 fn read_value(source: &str) -> Result<String, Box<dyn std::error::Error>> {
     if source == "stdin" {
         Ok(io::read_to_string(io::stdin())?)
-    } else if source.starts_with('$') {
-        env::var(&source[1..])
-            .map_err(|_| Box::from(format!("Environment variable {source} not set")))
+    } else if let Some(env) = source.strip_prefix('$') {
+        env::var(env).map_err(|_| Box::from(format!("Environment variable {source} not set")))
     } else {
         Err(Box::from(format!("Unsupported source: {source}")))
     }

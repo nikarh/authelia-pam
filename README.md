@@ -1,4 +1,4 @@
-# 🧀 authelia-pam
+# 🔑 authelia-pam
 
 [![MIT/Apache 2.0](https://img.shields.io/badge/license-MIT%2FApache-blue.svg)](https://github.com/nikarh/authelia-pam#license)
 [![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/nikarh/authelia-pam/main.yaml)](https://github.com/nikarh/authelia-pam/actions/workflows/main.yaml)

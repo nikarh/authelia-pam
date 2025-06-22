@@ -2,8 +2,6 @@
 targets = [
     "x86_64-unknown-linux-gnu",
     "aarch64-unknown-linux-gnu",
-    "x86_64-apple-darwin",
-    "aarch64-apple-darwin",
 ]
 all-features = false
 no-default-features = false
@@ -20,7 +18,7 @@ yanked = "deny"
 [licenses]
 version = 2
 private = { ignore = true }
-allow = ["MIT", "Apache-2.0", "BSD-3-Clause"]
+allow = ["MIT", "Apache-2.0", "CDLA-Permissive-2.0"]
 confidence-threshold = 0.9
 exceptions = [{ name = "unicode-ident", allow = ["Unicode-3.0"] }]
 

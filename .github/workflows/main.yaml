@@ -9,12 +9,7 @@ on:
 jobs:
   check:
     name: Check
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        include:
-          - os: ubuntu-22.04
-          - os: macos-14
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -35,14 +30,12 @@ jobs:
     needs: [check]
     name: Build for ${{ matrix.target }}
     if: github.repository_owner == 'nikarh'
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-24.04
     strategy:
       matrix:
         include:
           - target: x86_64-unknown-linux-gnu
-            os: ubuntu-22.04
           - target: aarch64-unknown-linux-gnu
-            os: ubuntu-22.04
     timeout-minutes: 60
     steps:
       - name: Checkout repository
@@ -52,11 +45,12 @@ jobs:
       - uses: taiki-e/setup-cross-toolchain-action@v1
         with:
           target: ${{ matrix.target }}
-        if: startsWith(matrix.os, 'ubuntu') && !contains(matrix.target, '-musl')
+        if: "!contains(matrix.target, 'aarch64')"
       - uses: taiki-e/install-action@cross
-        if: contains(matrix.target, '-musl')
+        if: contains(matrix.target, 'aarch64')
       - uses: taiki-e/upload-rust-binary-action@v1
         with:
+          ref: refs/tags/rolling
           bin: ${{ github.event.repository.name }}
           include: LICENSE-MIT,LICENSE-APACHE,CHANGELOG.md,README.md
           target: ${{ matrix.target }}
