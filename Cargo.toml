@@ -8,12 +8,10 @@ openssl = ["ureq/native-tls"]
 rustls = ["ureq/rustls"]
 
 [dependencies]
+ureq = { version = "3.0.12", default-features = false }
+
 pico-args = "0.5.0"
 serde_json = "1.0.140"
-ureq = { version = "3.0.12", default-features = false, features = [
-    "native-tls",
-] }
-
 [profile.release]
 opt-level = 'z'
 strip = true
@@ -28,4 +26,3 @@ panic = "abort"
 # of CA certificates.
 [patch.crates-io]
 webpki-root-certs = { path = "./patch/webpki-root-certs" }
-
