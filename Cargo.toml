@@ -3,6 +3,10 @@ name = "authelia-pam"
 version = "0.1.2"
 edition = "2024"
 
+[features]
+openssl = ["ureq/native-tls"]
+rustls = ["ureq/rustls"]
+
 [dependencies]
 pico-args = "0.5.0"
 serde_json = "1.0.140"

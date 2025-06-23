@@ -22,10 +22,15 @@ fn read_value(source: &str) -> Result<String, Box<dyn std::error::Error>> {
 }
 
 fn run() -> Result<(), Box<dyn std::error::Error>> {
+    #[cfg(feature = "openssl")]
+    let tls_provider = ureq::tls::TlsProvider::NativeTls;
+    #[cfg(all(feature = "rustls", not(feature = "openssl")))]
+    let tls_provider = ureq::tls::TlsProvider::Rustls;
+
     let config = Agent::config_builder()
         .tls_config(
             TlsConfig::builder()
-                .provider(ureq::tls::TlsProvider::NativeTls)
+                .provider(tls_provider)
                 .root_certs(ureq::tls::RootCerts::PlatformVerifier)
                 .build(),
         )
