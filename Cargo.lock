@@ -4,7 +4,7 @@ version = 4
 
 [[package]]
 name = "authelia-pam"
-version = "0.1.5"
+version = "0.1.6"
 dependencies = [
  "pico-args",
  "serde_json",
