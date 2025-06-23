@@ -39,6 +39,11 @@ jobs:
         provider:
           - openssl
           - rustls
+        include:
+          - target: x86_64-unknown-linux-musl
+            provider: rustls
+          - target: aarch64-unknown-linux-musl
+            provider: rustls
     timeout-minutes: 60
     steps:
       - name: Checkout repository
