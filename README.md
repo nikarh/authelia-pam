@@ -31,7 +31,7 @@ authelia-pam
   # This is the place from where authelia-pam reads the password.
   # Default 'stdin', but can be overriden when this program is used for something other than PAM.
   # For example, for [Home Assistant authentication provider] use '$password'. \
-  --password-srd 'stdin'
+  --password-src 'stdin'
   # Optional, if passed would print meta in [Home Assistant authentication provider] format to stdout on successful authentication
   --meta
 
