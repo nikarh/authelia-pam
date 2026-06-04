@@ -5,7 +5,7 @@ edition = "2024"
 license = "MIT OR Apache-2.0"
 
 [features]
-openssl = ["ureq/native-tls"]
+openssl = ["ureq/native-tls", "ureq/vendored"]
 rustls = ["ureq/rustls", "ureq/platform-verifier"]
 
 [dependencies]
