@@ -18,9 +18,8 @@ yanked = "deny"
 [licenses]
 version = 2
 private = { ignore = true }
-allow = ["MIT", "Apache-2.0", "CDLA-Permissive-2.0"]
+allow = ["MIT", "Apache-2.0"]
 confidence-threshold = 0.9
-exceptions = [{ name = "unicode-ident", allow = ["Unicode-3.0"] }]
 
 [[licenses.clarify]]
 name = "webpki"
