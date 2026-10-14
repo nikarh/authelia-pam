@@ -67,10 +67,14 @@ homeassistant:
         "--authelia-url", "https://my.authelia",
         "--forwarded-host", "https://my.service",
         "--username-src", "$username",
-        "--password-src, "$password",
+        "--password-src", "$password",
         "--meta"
       ]
 ```
+
+Since this is a username and password provider, Home Assistant logins go through Authelia without 2FA.
+If you also want 2FA, or a "Login with Authelia" button that reuses your existing Authelia session, consider [hass-oidc-auth] instead.
+It is a Home Assistant integration that adds OpenID Connect login, so authentication, including 2FA, happens on Authelia's own login page, with Authelia configured as an [OpenID Connect provider][Authelia OpenID Connect].
 
 ## License
 
@@ -83,3 +87,5 @@ Except where noted (below and/or in individual files), all code in this reposito
 [Authelia]: https://www.authelia.com/
 [Authelia HTTP API]: https://github.com/authelia/authelia/blob/master/api/openapi.yml
 [Home Assistant authentication provider]: https://www.home-assistant.io/docs/authentication/providers/#command-line
+[hass-oidc-auth]: https://github.com/christiaangoossens/hass-oidc-auth
+[Authelia OpenID Connect]: https://www.authelia.com/integration/openid-connect/introduction/
