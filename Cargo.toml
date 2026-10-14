@@ -9,10 +9,10 @@ openssl = ["ureq/native-tls", "ureq/vendored"]
 rustls = ["ureq/rustls", "ureq/platform-verifier"]
 
 [dependencies]
-ureq = { version = "3.3.0", default-features = false }
+ureq = { version = "3.4.2", default-features = false }
 
 pico-args = "0.5.0"
-serde_json = "1.0.150"
+serde_json = "1.0.154"
 [profile.release]
 opt-level = 'z'
 strip = true

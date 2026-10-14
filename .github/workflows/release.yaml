@@ -1,18 +1,41 @@
 name: Release
 
+# Runs from main rather than on the release PR being closed, since the `release`
+# environment only allows deployments from the main and release branches.
 on:
-  pull_request:
-    types:
-      - closed
+  push:
     branches:
       - main
+  workflow_dispatch:
+    inputs:
+      commit:
+        description: Release PR merge commit to release (defaults to the tip of the branch)
+        required: false
+
+env:
+  COMMIT: ${{ inputs.commit || github.sha }}
 
 jobs:
   create-release:
     runs-on: ubuntu-latest
     environment: release
-    if: github.event_name == 'pull_request' && github.event.action == 'closed' && contains(github.event.pull_request.labels.*.name, 'release')
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, 'Release v')
     steps:
+      - name: Find the release PR
+        id: pr
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          pr=$(gh api "repos/${{ github.repository }}/commits/$COMMIT/pulls" \
+            --jq '[.[] | select(.merged_at != null and any(.labels[]; .name == "release"))][0]')
+          if [[ -z "$pr" || "$pr" == "null" ]]; then
+            echo "::error::$COMMIT is not a merged release PR"
+            exit 1
+          fi
+          title=$(jq -r .title <<<"$pr")
+          echo "title=$title" >> "$GITHUB_OUTPUT"
+          echo "tag=$(awk '{print $2}' <<<"$title")" >> "$GITHUB_OUTPUT"
+          jq -r '.body // ""' <<<"$pr" > "$RUNNER_TEMP/body.md"
       - name: Generate GitHub token
         uses: actions/create-github-app-token@v3
         id: generate-token
@@ -21,20 +44,18 @@ jobs:
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
       - name: Checkout Code
         uses: actions/checkout@v7
-      - name: Extract version from PR title
-        id: tag
-        run: echo "${{ github.event.pull_request.title }}" | awk '{print "name="  $2}' >> "$GITHUB_OUTPUT"
       - name: Push a new tag
-        id: tag_version
         uses: mathieudutour/github-tag-action@v7
         with:
           github_token: ${{ steps.generate-token.outputs.token }}
-          custom_tag: ${{ steps.tag.outputs.name }}
+          commit_sha: ${{ env.COMMIT }}
+          custom_tag: ${{ steps.pr.outputs.tag }}
           tag_prefix: ""
       - name: Create a GitHub release
         uses: ncipollo/release-action@v1
         with:
-          tag: ${{ steps.tag.outputs.name }}
-          name: ${{ github.event.pull_request.title }}
-          body: ${{ github.event.pull_request.body }}
+          tag: ${{ steps.pr.outputs.tag }}
+          commit: ${{ env.COMMIT }}
+          name: ${{ steps.pr.outputs.title }}
+          bodyFile: ${{ runner.temp }}/body.md
           token: ${{ steps.generate-token.outputs.token }}
