@@ -21,14 +21,6 @@ private = { ignore = true }
 allow = ["MIT", "Apache-2.0"]
 confidence-threshold = 0.9
 
-[[licenses.clarify]]
-name = "webpki"
-expression = "ISC AND BSD-3-Clause"
-license-files = [
-    { path = "LICENSE", hash = 0x001c7e6c },
-    { path = "third-party/chromium/LICENSE", hash = 0x001c7e6c },
-]
-
 [bans]
 multiple-versions = "deny"
 # Lint level for when a crate version requirement is `*`
