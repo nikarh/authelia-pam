@@ -6,6 +6,12 @@ permissions:
 on:
   release:
     types: [published]
+  # Signs the checksums of a release published before they were (or again).
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to sign, e.g. v0.2.0
+        required: true
 
 defaults:
   run:
@@ -14,7 +20,7 @@ defaults:
 jobs:
   upload-assets:
     name: ${{ matrix.target }}
-    if: github.repository_owner == 'nikarh'
+    if: github.repository_owner == 'nikarh' && github.event_name == 'release'
     # aarch64 glibc builds run natively on an ARM runner: linked against the runner's OpenSSL 3, not the outdated one
     # of cross's images.
     runs-on: ${{ matrix.target == 'aarch64-unknown-linux-gnu' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
@@ -55,3 +61,37 @@ jobs:
           tar: all
           archive: ${{ github.event.repository.name }}-$target-$tag-${{ matrix.provider }}
           token: ${{ secrets.GITHUB_TOKEN }}
+
+  # SHA256SUMS of every archive, signed with the release key (docs/signing-key.asc), so that a download can be
+  # verified: gpg --verify SHA256SUMS.asc SHA256SUMS && sha256sum --check --ignore-missing SHA256SUMS.
+  sign:
+    name: Sign the checksums
+    needs: upload-assets
+    if: ${{ always() && github.repository_owner == 'nikarh' && (needs.upload-assets.result == 'success' || github.event_name == 'workflow_dispatch') }}
+    runs-on: ubuntu-24.04
+    environment: release
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TAG: ${{ inputs.tag || github.event.release.tag_name }}
+    steps:
+      - name: Checksums of the release's archives
+        run: |
+          set -euo pipefail
+          mkdir assets && cd assets
+          gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --pattern '*.tar.gz'
+          sha256sum -- *.tar.gz > ../SHA256SUMS
+          cat ../SHA256SUMS
+      - name: Sign and upload
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          export GNUPGHOME="$RUNNER_TEMP/gnupg"
+          install -d -m 700 "$GNUPGHOME"
+          gpg --batch --import <<<"$GPG_PRIVATE_KEY"
+          gpg --batch --yes --pinentry-mode loopback --passphrase-fd 3 --armor --detach-sign \
+            --output SHA256SUMS.asc SHA256SUMS 3<<<"$GPG_PASSPHRASE"
+          gpg --batch --verify SHA256SUMS.asc SHA256SUMS
+          gh release upload "$TAG" SHA256SUMS SHA256SUMS.asc --repo "$GITHUB_REPOSITORY" --clobber
