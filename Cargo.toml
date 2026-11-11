@@ -5,25 +5,22 @@ edition = "2024"
 license = "MIT OR Apache-2.0"
 
 [features]
-openssl = ["ureq/native-tls", "ureq/vendored"]
-rustls = ["ureq/rustls", "ureq/platform-verifier"]
+# TLS through the system's OpenSSL (native-tls), linked dynamically, with the system's certificate authorities: the
+# binary carries no TLS of its own. For glibc systems.
+openssl = ["ureq/native-tls-no-default"]
+# TLS through rustls (ring), statically linked, with the system's certificate authorities (platform verifier). For
+# static musl builds that must run anywhere.
+rustls = ["ureq/rustls-no-provider", "ureq/platform-verifier", "dep:rustls"]
 
 [dependencies]
-ureq = { version = "3.4.2", default-features = false }
-
+ureq = { version = "3.5.1", default-features = false }
+rustls = { version = "0.23.46", optional = true, default-features = false, features = ["ring"] }
 pico-args = "0.5.0"
 serde_json = "1.0.154"
+
 [profile.release]
 opt-level = 'z'
 strip = true
 lto = true
 codegen-units = 1
 panic = "abort"
-
-# Unfortunately compiling `ureq` with `native-tls` feature forces
-# `webpki-root-certs` dependency to be compiled.
-# Since the application uses native TLS CA certificates, this
-# dependency is not needed and is patched to provide an empty array
-# of CA certificates.
-[patch.crates-io]
-webpki-root-certs = { path = "./patch/webpki-root-certs" }

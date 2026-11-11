@@ -1,8 +1,0 @@
-[package]
-name = "webpki-root-certs"
-version = "1.0.7"
-license = "CDLA-Permissive-2.0"
-description = "Override of webpki-root-certs that does not embed anything"
-
-[dependencies]
-pki-types = { package = "rustls-pki-types", version = "1.14", default-features = false }
