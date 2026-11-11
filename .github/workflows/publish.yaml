@@ -15,7 +15,9 @@ jobs:
   upload-assets:
     name: ${{ matrix.target }}
     if: github.repository_owner == 'nikarh'
-    runs-on: ubuntu-24.04
+    # aarch64 glibc builds run natively on an ARM runner: linked against the runner's OpenSSL 3, not the outdated one
+    # of cross's images.
+    runs-on: ${{ matrix.target == 'aarch64-unknown-linux-gnu' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
     strategy:
       matrix:
         target:
@@ -40,7 +42,10 @@ jobs:
           target: ${{ matrix.target }}
         if: "!contains(matrix.target, 'aarch64')"
       - uses: taiki-e/install-action@cross
-        if: contains(matrix.target, 'aarch64')
+        if: matrix.target == 'aarch64-unknown-linux-musl'
+      - name: OpenSSL headers
+        if: matrix.provider == 'openssl'
+        run: sudo apt-get install -y --no-install-recommends libssl-dev pkg-config
       - uses: taiki-e/upload-rust-binary-action@v1
         with:
           bin: ${{ github.event.repository.name }}
