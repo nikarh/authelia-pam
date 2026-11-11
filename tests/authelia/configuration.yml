@@ -1,0 +1,51 @@
+# Authelia for the integration tests (tests/authelia.rs): TLS with a test CA (ca.crt), the users in users.yml, and
+# one host per kind of access control rule. The secrets are test-only.
+server:
+  address: 'tcp://:9091/'
+  tls:
+    certificate: '/config/tls.crt'
+    key: '/config/tls.key'
+log:
+  level: 'warn'
+# No network but the tests': no clock check against a public NTP server.
+ntp:
+  disable_startup_check: true
+identity_validation:
+  reset_password:
+    jwt_secret: 'test-only-jwt-secret-0123456789abcdef0123456789abcdef'
+authentication_backend:
+  file:
+    path: '/config/users.yml'
+    watch: false
+access_control:
+  default_policy: 'deny'
+  rules:
+    - domain: 'one.example.localhost'
+      policy: 'one_factor'
+    - domain: 'two.example.localhost'
+      policy: 'two_factor'
+    - domain: 'bypass.example.localhost'
+      policy: 'bypass'
+    - domain: 'deny.example.localhost'
+      policy: 'deny'
+    - domain: 'admins.example.localhost'
+      policy: 'one_factor'
+      subject: 'group:admins'
+    - domain: 'alice.example.localhost'
+      policy: 'one_factor'
+      subject: 'user:alice'
+session:
+  secret: 'test-only-session-secret-0123456789abcdef0123456789'
+  cookies:
+    - domain: 'example.localhost'
+      authelia_url: 'https://auth.example.localhost:9091'
+storage:
+  encryption_key: 'test-only-storage-encryption-key-0123456789abcdef'
+  local:
+    path: '/tmp/db.sqlite3'
+notifier:
+  filesystem:
+    filename: '/tmp/notification.txt'
+# Many failed logins on purpose: no bans that would make later cases fail.
+regulation:
+  max_retries: 0

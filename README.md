@@ -76,6 +76,50 @@ Since this is a username and password provider, Home Assistant logins go through
 If you also want 2FA, or a "Login with Authelia" button that reuses your existing Authelia session, consider [hass-oidc-auth] instead.
 It is a Home Assistant integration that adds OpenID Connect login, so authentication, including 2FA, happens on Authelia's own login page, with Authelia configured as an [OpenID Connect provider][Authelia OpenID Connect].
 
+## Builds and TLS
+
+Release archives come in two flavours, both using [ureq] (a small blocking HTTP client, no async runtime):
+
+| Archive | TLS | Runs on | Size, x86_64 (v0.1.7 → now) |
+|---|---|---|---|
+| `*-linux-gnu-*-openssl` | the system's OpenSSL (native-tls), linked dynamically: needs `libssl.so.3` | glibc distributions | 6.4 MB → 0.7 MB |
+| `*-linux-gnu-*-rustls` | rustls with ring, statically linked | glibc distributions without OpenSSL 3 | 1.6 MB → 1.6 MB |
+| `*-linux-musl-*-rustls` | rustls with ring, statically linked | anywhere, e.g. Alpine-based containers | 1.7 MB → 1.6 MB (aarch64: 1.43 → 1.36 MB) |
+
+The OpenSSL build used to carry a copy of OpenSSL; it now uses the system's, which is why it is small. A static build
+has to carry its TLS: rustls with ring is about 500 kB of it. All builds use `opt-level = "z"` (smaller than `"s"`),
+LTO, one codegen unit, `panic = "abort"` and stripped symbols.
+
+The certificate of Authelia is always verified against the system's certificate authorities (OpenSSL's own paths,
+or the platform verifier with rustls); `SSL_CERT_FILE` points both at another bundle, e.g. a private CA.
+
+[ureq]: https://github.com/algesten/ureq
+
+## Behaviour and limits
+
+- Exit status 0 only when Authelia accepts the password (`/api/firstfactor`) **and** its access control allows the
+  user one-factor access to `--forwarded-host` (`/api/authz/auth-request`); 1 otherwise, with the reason on stderr
+  (never the password).
+- Usernames longer than 256 bytes and passwords longer than 4096 are refused without asking Authelia; so is input that
+  isn't UTF-8. A NUL that `pam_exec` puts after the password is dropped.
+- Credentials only ever go into the JSON body, escaped; `--forwarded-host` and cookies are checked for control
+  characters before they go into headers. With `--meta`, the display name is printed without control characters, so a
+  name can't add lines (such as `group = system-admin`) to Home Assistant's metadata.
+- Every connection has a 10 second timeout and answers are read up to 256 kB.
+
+## Tests
+
+`cargo test` runs the unit tests. `tests/authelia.rs` runs the binary against a real Authelia in a container
+(`tests/authelia/`: TLS with a test CA, users with unusual names and passwords, one access control rule of each kind):
+valid and invalid passwords, unknown and disabled users, one factor, two factors, deny, bypass, group and user rules,
+the display name, and inputs meant to break or trick it (look-alike usernames, JSON and header injection attempts,
+shell metacharacters, very long and non-UTF-8 input). It needs Docker or Podman and takes a few seconds:
+
+```sh
+cargo test --features rustls --test authelia -- --ignored     # or --features openssl
+CONTAINER_ENGINE=podman cargo test --features rustls --test authelia -- --ignored
+```
+
 ## License
 
 Except where noted (below and/or in individual files), all code in this repository is dual-licensed at your option under either:
