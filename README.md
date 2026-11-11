@@ -95,6 +95,20 @@ or the platform verifier with rustls); `SSL_CERT_FILE` points both at another bu
 
 [ureq]: https://github.com/algesten/ureq
 
+## Verifying downloads
+
+Each release has `SHA256SUMS` for its archives, signed with the release key
+([`docs/signing-key.asc`](docs/signing-key.asc), ed25519,
+`7701 6003 25A7 3B03 AAF8  46B5 67EA 2DE5 86B9 C3A2`, expires 2029-11-10):
+
+```sh
+tag=v0.2.0 file=authelia-pam-x86_64-unknown-linux-musl-$tag-rustls.tar.gz
+base=https://github.com/nikarh/authelia-pam/releases/download/$tag
+curl -fLO "$base/$file" -fLO "$base/SHA256SUMS" -fLO "$base/SHA256SUMS.asc"
+curl -fsSL https://raw.githubusercontent.com/nikarh/authelia-pam/main/docs/signing-key.asc | gpg --import
+gpg --verify SHA256SUMS.asc SHA256SUMS && sha256sum --check --ignore-missing SHA256SUMS
+```
+
 ## Behaviour and limits
 
 - Exit status 0 only when Authelia accepts the password (`/api/firstfactor`) **and** its access control allows the
