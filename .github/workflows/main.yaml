@@ -27,11 +27,31 @@ jobs:
         run: cargo clippy --workspace --all-targets --all-features
       - name: "`cargo test`"
         run: cargo test --all-features
+  integration:
+    # Both TLS providers against a real Authelia in Docker (tests/authelia.rs): every kind of access rule, odd and
+    # hostile usernames and passwords. Authelia starts in a few seconds; the cases run in parallel.
+    name: Integration (Authelia)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: rust-toolchain
+        uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+      - name: Pull Authelia
+        run: docker pull "$(cat tests/authelia/image)"
+      - name: With OpenSSL (dynamically linked)
+        run: cargo test --features openssl --test authelia -- --ignored
+      - name: With rustls
+        run: cargo test --features rustls --test authelia -- --ignored
   build:
     needs: [check]
     name: Build for ${{ matrix.target }}
     if: github.repository_owner == 'nikarh'
-    runs-on: ubuntu-24.04
+    # aarch64 glibc builds run natively on an ARM runner: linked against the runner's OpenSSL 3, not the outdated one
+    # of cross's images.
+    runs-on: ${{ matrix.target == 'aarch64-unknown-linux-gnu' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
     strategy:
       matrix:
         target:
@@ -56,7 +76,10 @@ jobs:
           target: ${{ matrix.target }}
         if: "!contains(matrix.target, 'aarch64')"
       - uses: taiki-e/install-action@cross
-        if: contains(matrix.target, 'aarch64')
+        if: matrix.target == 'aarch64-unknown-linux-musl'
+      - name: OpenSSL headers
+        if: matrix.provider == 'openssl'
+        run: sudo apt-get install -y --no-install-recommends libssl-dev pkg-config
       - uses: taiki-e/upload-rust-binary-action@v1
         with:
           ref: refs/tags/rolling

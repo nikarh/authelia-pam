@@ -1,0 +1,23 @@
+# Users of the integration tests (tests/authelia.rs): test-only passwords, cheap argon2 so the tests are fast.
+users:
+  "alice":
+    displayname: "Ålïce Ünïcode 😀"
+    password: '$argon2id$v=19$m=64,t=1,p=1$1uhpOKHLctnElHPdTX+KNg$aj+288FVyi2xEOC2tvcjLFAOq+q623CmYhYNVoHaolQ'
+    email: 'alice@example.com'
+    groups: []
+  "bob":
+    displayname: "Bob Builder"
+    password: '$argon2id$v=19$m=64,t=1,p=1$EQqOyN5ijnY6gn2dotSaPg$QHvKpd/cOG4dTeRxmPV6/keScCWq4SkgJveGXb1ZTQw'
+    email: 'bob@example.com'
+    groups: [admins]
+  "carol":
+    displayname: "Carol Disabled"
+    password: '$argon2id$v=19$m=64,t=1,p=1$wYqiySlek0joZbU3Kb2Jmw$pl4FDaMAJ1CiwF5aUaFE3RkodYtaf08JEgnvMHdhFwA'
+    email: 'carol@example.com'
+    groups: []
+    disabled: true
+  "dävé":
+    displayname: "Dävé"
+    password: '$argon2id$v=19$m=64,t=1,p=1$IGkokHZsrdHwtFHcq6HWOQ$Yscgfkeia2zXcTF6qEBtrUX5drSTtmTXfPratUyqMbQ'
+    email: 'dave@example.com'
+    groups: []
